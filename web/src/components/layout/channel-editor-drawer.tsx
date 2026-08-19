@@ -17,6 +17,7 @@ export function ChannelEditorDrawer({ open, channel, onSave, onClose }: { open: 
     const apiFormatOptions: Array<{ label: string; value: ApiCallFormat }> = [
         { label: "OpenAI", value: "openai" },
         { label: "Gemini", value: "gemini" },
+        { label: "MiniMax H3", value: "minimax" },
     ];
     const capabilityOptions: Array<{ label: string; value: ModelCapability }> = ["image", "video", "text", "audio"].map((value) => ({ label: t(`config.channelEditor.capabilities.${value}`), value: value as ModelCapability }));
 
@@ -30,7 +31,9 @@ export function ChannelEditorDrawer({ open, channel, onSave, onClose }: { open: 
     const setModels = (models: ChannelModel[]) => patch({ models });
 
     const changeApiFormat = (apiFormat: ApiCallFormat) => {
-        const baseUrl = !draft.baseUrl.trim() || draft.baseUrl.trim() === defaultBaseUrlForApiFormat(draft.apiFormat) ? defaultBaseUrlForApiFormat(apiFormat) : draft.baseUrl;
+        const normalizedBaseUrl = draft.baseUrl.trim().replace(/\/+$/, "");
+        const isLegacyMetasoVideoUrl = normalizedBaseUrl === "https://metaso.cn/api/openai/v1";
+        const baseUrl = !normalizedBaseUrl || normalizedBaseUrl === defaultBaseUrlForApiFormat(draft.apiFormat) || (apiFormat === "minimax" && isLegacyMetasoVideoUrl) ? defaultBaseUrlForApiFormat(apiFormat) : draft.baseUrl;
         patch({ apiFormat, baseUrl });
     };
 

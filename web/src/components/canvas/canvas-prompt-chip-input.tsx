@@ -43,16 +43,20 @@ export function CanvasPromptChipInput({ value, references, onChange, onSubmit, c
     const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     const activeReferences = useMemo(() => references.filter((item) => item.active), [references]);
-    const referenceByLabel = useMemo(() => new Map(activeReferences.map((item) => [item.label, item])), [activeReferences]);
+    const referenceByLabel = useMemo(() => {
+        const entries: Array<[string, CanvasResourceReference]> = [];
+        activeReferences.forEach((item, index) => entries.push([item.label, item], [`@${index + 1}`, item]));
+        return new Map(entries);
+    }, [activeReferences]);
     // Match longer labels first so a shorter label cannot split a longer one.
-    const activeLabels = useMemo(() => Array.from(new Set(activeReferences.map((item) => item.label))).sort((a, b) => b.length - a.length), [activeReferences]);
+    const activeLabels = useMemo(() => Array.from(new Set(activeReferences.flatMap((item, index) => [item.label, `@${index + 1}`]))).sort((a, b) => b.length - a.length), [activeReferences]);
     const tokens = useMemo(() => parseTokens(value, activeLabels), [value, activeLabels]);
 
     const candidates = useMemo(() => {
         if (!mention) return [];
         const query = mention.query.trim().toLowerCase();
         if (!query) return activeReferences;
-        return activeReferences.filter((item) => `${item.label} ${item.title} ${item.kind} ${item.text || ""}`.toLowerCase().includes(query));
+        return activeReferences.filter((item, index) => `${item.label} @${index + 1} ${item.title} ${item.kind} ${item.text || ""}`.toLowerCase().includes(query));
     }, [mention, activeReferences]);
 
     // Rebuild the DOM from value when unfocused, or when a focused value is an external change rather than an emitted echo.
@@ -191,14 +195,14 @@ export function CanvasPromptChipInput({ value, references, onChange, onSubmit, c
                 onBlur={() => window.setTimeout(closeMention, 120)}
             />
             {mention && candidates.length ? (
-                <MentionMenu rect={mention.rect} references={candidates} activeIndex={Math.min(activeIndex, candidates.length - 1)} theme={theme} onSelect={insertReference} />
+                <MentionMenu rect={mention.rect} references={candidates} allReferences={activeReferences} activeIndex={Math.min(activeIndex, candidates.length - 1)} theme={theme} onSelect={insertReference} />
             ) : null}
             {imagePreview ? <Image src={imagePreview} alt={i18n.t("canvas.composer.imagePreview")} style={{ display: "none" }} preview={{ visible: true, src: imagePreview, onVisibleChange: (visible) => !visible && setImagePreview(null) }} /> : null}
         </div>
     );
 }
 
-function MentionMenu({ rect, references, activeIndex, theme, onSelect }: { rect: DOMRect | null; references: CanvasResourceReference[]; activeIndex: number; theme: (typeof canvasThemes)[keyof typeof canvasThemes]; onSelect: (reference: CanvasResourceReference) => void }) {
+function MentionMenu({ rect, references, allReferences, activeIndex, theme, onSelect }: { rect: DOMRect | null; references: CanvasResourceReference[]; allReferences: CanvasResourceReference[]; activeIndex: number; theme: (typeof canvasThemes)[keyof typeof canvasThemes]; onSelect: (reference: CanvasResourceReference) => void }) {
     const selectedRef = useRef(false);
     const activeItemRef = useRef<HTMLButtonElement | null>(null);
 
@@ -252,7 +256,7 @@ function MentionMenu({ rect, references, activeIndex, theme, onSelect }: { rect:
                     <ReferencePreview reference={reference} />
                     <span className="min-w-0 flex-1">
                         <span className="block font-medium">{reference.label}</span>
-                        <span className="block truncate opacity-65">{reference.text || reference.title}</span>
+                        <span className="block truncate opacity-65">@{allReferences.indexOf(reference) + 1} · {reference.text || reference.title}</span>
                     </span>
                 </button>
             ))}

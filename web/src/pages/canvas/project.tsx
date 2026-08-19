@@ -2248,7 +2248,7 @@ function InfiniteCanvasPage() {
                     const controller = startGenerationRequest(videoId, nodeId, nodeId, runController);
                     try {
                         const video = await storeGeneratedVideo(
-                            await requestVideoGeneration(generationConfig, effectivePrompt, generationContext.referenceImages, { signal: controller.signal }),
+                            await requestVideoGeneration(generationConfig, effectivePrompt, [...generationContext.referenceImages, ...generationContext.referenceVideos, ...generationContext.referenceAudios], { signal: controller.signal }),
                         );
                         const videoSize = fitNodeSize(video.width || spec.width, video.height || spec.height, VIDEO_NODE_MAX_WIDTH, VIDEO_NODE_MAX_HEIGHT);
                         setNodes((prev) =>

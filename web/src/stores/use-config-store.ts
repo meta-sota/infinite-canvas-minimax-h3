@@ -5,7 +5,7 @@ import { nanoid } from "nanoid";
 
 import i18n from "@/i18n";
 
-export type ApiCallFormat = "openai" | "gemini";
+export type ApiCallFormat = "openai" | "gemini" | "minimax";
 export type ModelCapability = "image" | "video" | "text" | "audio";
 export type ReasoningEffort = "auto" | "low" | "medium" | "high" | "xhigh";
 
@@ -66,7 +66,9 @@ export const CONFIG_STORE_KEY = "infinite-canvas:ai_config_store";
 const CHANNEL_MODEL_SEPARATOR = "::";
 const OPENAI_BASE_URL = "https://api.openai.com";
 const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com";
-const METASO_VIDEO_BASE_URL = "https://metaso.cn/api/openai/v1";
+const MINIMAX_BASE_URL = "https://metaso.cn/api";
+const METASO_VIDEO_BASE_URL = MINIMAX_BASE_URL;
+const LEGACY_METASO_VIDEO_BASE_URL = "https://metaso.cn/api/openai/v1";
 const METASO_VIDEO_MODEL = "MiniMax-H3";
 
 export const defaultConfig: AiConfig = {
@@ -92,7 +94,7 @@ export const defaultConfig: AiConfig = {
             name: "Metaso Minimax-H3",
             baseUrl: METASO_VIDEO_BASE_URL,
             apiKey: "",
-            apiFormat: "openai",
+            apiFormat: "minimax",
             models: [{ name: METASO_VIDEO_MODEL, capability: "video" }],
         },
     ],
@@ -141,7 +143,7 @@ type ConfigStore = {
     clearPromptContinue: () => void;
 };
 
-const VIDEO_KEYWORDS = ["video", "sora", "veo", "kling", "wan", "hailuo"];
+const VIDEO_KEYWORDS = ["video", "sora", "veo", "kling", "wan", "hailuo", "minimax-h3"];
 
 export function boolConfig(value: string, fallback: boolean) {
     return value ? value === "true" : fallback;
@@ -237,8 +239,12 @@ export const useConfigStore = create<ConfigStore>()(
                 const channels = normalizeChannels(config);
                 const metasoChannel = defaultConfig.channels.find((channel) => channel.id === "metaso-video");
                 const savedMetasoChannel = channels.find((channel) => channel.id === metasoChannel?.id);
-                if (metasoChannel && savedMetasoChannel?.name === "Metaso 国内视频") {
-                    savedMetasoChannel.name = metasoChannel.name;
+                if (metasoChannel && savedMetasoChannel) {
+                    if (savedMetasoChannel.name === "Metaso 国内视频") savedMetasoChannel.name = metasoChannel.name;
+                    if (savedMetasoChannel.apiFormat === "openai" && savedMetasoChannel.baseUrl.replace(/\/+$/, "") === LEGACY_METASO_VIDEO_BASE_URL.replace(/\/+$/, "")) {
+                        savedMetasoChannel.apiFormat = "minimax";
+                        savedMetasoChannel.baseUrl = metasoChannel.baseUrl;
+                    }
                 } else if (metasoChannel && !savedMetasoChannel) {
                     channels.push(createModelChannel(metasoChannel));
                 }
@@ -394,11 +400,12 @@ function normalizeChannels(config: AiConfig) {
 
 export function defaultBaseUrlForApiFormat(apiFormat: ApiCallFormat) {
     if (apiFormat === "gemini") return GEMINI_BASE_URL;
+    if (apiFormat === "minimax") return MINIMAX_BASE_URL;
     return OPENAI_BASE_URL;
 }
 
 function normalizeApiFormat(apiFormat: unknown): ApiCallFormat {
-    return apiFormat === "gemini" ? apiFormat : "openai";
+    return apiFormat === "gemini" || apiFormat === "minimax" ? apiFormat : "openai";
 }
 
 function uniqueModelOptions(models: string[]) {

@@ -737,6 +737,7 @@ export async function requestGeneration(config: AiConfig, prompt: string, option
             throw new Error(readAxiosError(error, apiText("requestFailed")));
         }
     }
+    if (requestConfig.apiFormat === "minimax") throw new Error(apiText("minimaxImageUnsupported"));
     if (requestConfig.apiFormat === "gemini") {
         try {
             return await requestGeminiImages(requestConfig, prompt, [], n, options);
@@ -797,6 +798,7 @@ export async function requestEdit(config: AiConfig, prompt: string, references: 
             throw new Error(readAxiosError(error, apiText("requestFailed")));
         }
     }
+    if (requestConfig.apiFormat === "minimax") throw new Error(apiText("minimaxImageUnsupported"));
     if (requestConfig.apiFormat === "gemini") {
         if (mask) throw new Error(apiText("geminiMaskUnsupported"));
         try {
@@ -858,6 +860,7 @@ export async function requestImageQuestion(config: AiConfig, messages: AiTextMes
         }
     }
     try {
+        if (requestConfig.apiFormat === "minimax") throw new Error(apiText("minimaxTextUnsupported"));
         if (requestConfig.apiFormat === "gemini") {
             const answer = (await requestGeminiStreamingResponse(requestConfig, toGeminiBody(requestConfig, messages), onDelta, options)).content || apiText("noContent");
             if (answer === apiText("noContent")) onDelta(answer);
@@ -877,6 +880,7 @@ export async function requestImageQuestion(config: AiConfig, messages: AiTextMes
 
 export async function fetchImageModels(config: Pick<AiConfig, "baseUrl" | "apiKey" | "apiFormat">) {
     try {
+        if (config.apiFormat === "minimax") return ["MiniMax-H3"];
         if (config.apiFormat === "gemini") {
             const response = await axios.get<GeminiPayload>(geminiApiUrl({ ...defaultGeminiConfig, ...config }), { headers: geminiHeaders({ ...defaultGeminiConfig, ...config }) });
             validateGeminiPayload(response.data);

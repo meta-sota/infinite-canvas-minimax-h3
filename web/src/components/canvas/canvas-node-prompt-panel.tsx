@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { ArrowUp, LoaderCircle, Maximize2, Square } from "lucide-react";
+import { ArrowUp, FileText, Film, Image as ImageIcon, LoaderCircle, Maximize2, Square, Volume2 } from "lucide-react";
 import { Button, Modal, Tooltip } from "antd";
 import { useTranslation } from "react-i18next";
 
 import { ModelPicker } from "@/components/model-picker";
-import { defaultConfig, resolveModelForCapability, useConfigStore, useEffectiveConfig, type AiConfig } from "@/stores/use-config-store";
+import { defaultConfig, resolveModelForCapability, resolveModelRequestConfig, useConfigStore, useEffectiveConfig, type AiConfig } from "@/stores/use-config-store";
 import { canvasThemes } from "@/lib/canvas-theme";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { CanvasImageSettingsPopover } from "./canvas-image-settings-popover";
@@ -37,6 +37,9 @@ export function CanvasNodePromptPanel({ node, isRunning, onPromptChange, onConfi
     const theme = canvasThemes[useThemeStore((state) => state.theme)];
     const mode = modeOverride ?? defaultMode(node.type);
     const config = buildNodeConfig(globalConfig, node, mode);
+    const requestConfig = resolveModelRequestConfig(config, config.model);
+    const isMiniMaxVideo = mode === "video" && requestConfig.apiFormat === "minimax";
+    const promptReferences = isMiniMaxVideo ? ["image", "video", "audio"].flatMap((kind) => mentionReferences.filter((reference) => reference.active && reference.kind === kind)) : mentionReferences;
     const hasTextContent = node.type === CanvasNodeType.Text && Boolean(node.metadata?.content?.trim());
     const hasImageContent = node.type === CanvasNodeType.Image && Boolean(node.metadata?.content);
     const isEditingExistingContent = hasTextContent || hasImageContent;
@@ -76,13 +79,14 @@ export function CanvasNodePromptPanel({ node, isRunning, onPromptChange, onConfi
         >
             <CanvasPromptChipInput
                 value={prompt}
-                references={mentionReferences}
+                references={promptReferences}
                 onChange={updatePrompt}
                 onSubmit={submit}
                 className="thin-scrollbar h-40 w-full cursor-text resize-none rounded-xl px-3 py-2 text-sm leading-5 outline-none"
                 style={{ background: "transparent", color: theme.node.text }}
                 placeholder={t(`canvas.promptPanel.${mode === "image" && hasImageContent ? "editImage" : mode === "text" && hasTextContent ? "editText" : mode}`)}
             />
+            {isMiniMaxVideo ? <MiniMaxReferenceStrip references={promptReferences} theme={theme} /> : null}
 
             <div className="mt-2 flex min-w-0 items-center justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-2">
@@ -144,16 +148,40 @@ export function CanvasNodePromptPanel({ node, isRunning, onPromptChange, onConfi
                 <div data-canvas-no-zoom className="pt-2" onWheelCapture={(event) => event.stopPropagation()}>
                     <CanvasPromptChipInput
                         value={prompt}
-                        references={mentionReferences}
+                        references={promptReferences}
                         onChange={updatePrompt}
                         className="thin-scrollbar h-[52dvh] min-h-80 w-full cursor-text overflow-y-auto rounded-xl border p-4 text-[15px] leading-6 outline-none"
                         style={{ background: "transparent", borderColor: theme.toolbar.border, color: theme.node.text }}
                         placeholder={t(`canvas.promptPanel.${mode === "image" && hasImageContent ? "editImage" : mode === "text" && hasTextContent ? "editText" : mode}`)}
                     />
+                    {isMiniMaxVideo ? <MiniMaxReferenceStrip references={promptReferences} theme={theme} /> : null}
                 </div>
             </Modal>
         </div>
     );
+}
+
+function MiniMaxReferenceStrip({ references, theme }: { references: CanvasResourceReference[]; theme: (typeof canvasThemes)[keyof typeof canvasThemes] }) {
+    const activeReferences = ["image", "video", "audio"].flatMap((kind) => references.filter((reference) => reference.active && reference.kind === kind));
+    if (!activeReferences.length) return null;
+    return (
+        <div className="mt-2 flex min-w-0 gap-2 overflow-x-auto pb-1" aria-label="MiniMax H3 参考素材">
+            {activeReferences.map((reference, index) => (
+                <div key={reference.id} className="group relative w-16 shrink-0" title={`${reference.label} · @${index + 1}`}>
+                    <div className="relative aspect-square overflow-hidden rounded-lg border" style={{ borderColor: theme.toolbar.border, background: theme.node.fill }}>
+                        {reference.kind === "image" && reference.previewUrl ? <img src={reference.previewUrl} alt={reference.title} className="size-full object-cover" /> : reference.kind === "video" && reference.previewUrl ? <video src={reference.previewUrl} className="size-full object-cover" muted preload="metadata" /> : <MiniMaxReferenceIcon kind={reference.kind} theme={theme} />}
+                        <span className="absolute bottom-1 left-1 rounded-full bg-black/70 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">@{index + 1}</span>
+                    </div>
+                    <div className="mt-1 truncate text-center text-[10px]" style={{ color: theme.node.muted }}>{reference.label}</div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function MiniMaxReferenceIcon({ kind, theme }: { kind: CanvasResourceReference["kind"]; theme: (typeof canvasThemes)[keyof typeof canvasThemes] }) {
+    const Icon = kind === "audio" ? Volume2 : kind === "video" ? Film : kind === "image" ? ImageIcon : FileText;
+    return <span className="grid size-full place-items-center" style={{ color: theme.node.muted }}><Icon className="size-5" /></span>;
 }
 
 function defaultMode(type: CanvasNodeData["type"]): CanvasNodeGenerationMode {
