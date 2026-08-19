@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import { requestEdit, requestGeneration, requestImageQuestion } from "@/services/api/image";
 import { requestAudioGeneration, storeGeneratedAudio } from "@/services/api/audio";
 import { requestVideoGeneration, storeGeneratedVideo } from "@/services/api/video";
-import { defaultConfig, useConfigStore, useEffectiveConfig } from "@/stores/use-config-store";
+import { defaultConfig, resolveModelRequestConfig, useConfigStore, useEffectiveConfig } from "@/stores/use-config-store";
 import { uploadImage } from "@/services/image-storage";
 import { uploadMediaFile } from "@/services/file-storage";
 import { nanoid } from "nanoid";
@@ -1551,7 +1551,21 @@ function InfiniteCanvasPage() {
                     coverUrl: "",
                     tags: [],
                     source: "Canvas",
-                    data: { url: node.metadata.content, storageKey: node.metadata.storageKey, width: node.width, height: node.height, bytes: node.metadata.bytes || 0, mimeType: node.metadata.mimeType || "video/mp4" },
+                    data: { url: node.metadata.content, storageKey: node.metadata.storageKey, width: node.width, height: node.height, bytes: node.metadata.bytes || 0, mimeType: node.metadata.mimeType || "video/mp4", durationMs: node.metadata.durationMs },
+                    metadata: { source: "canvas", nodeId: node.id, prompt: node.metadata?.prompt },
+                });
+                message.success(t("common.addedToAssets"));
+                return;
+            }
+            if (node.type === CanvasNodeType.Audio) {
+                if (!node.metadata?.content) return message.error(t("canvas.projectPage.noAudioToSave"));
+                addAsset({
+                    kind: "audio",
+                    title: node.metadata?.prompt?.slice(0, 24) || t("canvas.projectPage.canvasAudio"),
+                    coverUrl: "",
+                    tags: [],
+                    source: "Canvas",
+                    data: { url: node.metadata.content, storageKey: node.metadata.storageKey, bytes: node.metadata.bytes || 0, mimeType: node.metadata.mimeType || "audio/mpeg", durationMs: node.metadata.durationMs },
                     metadata: { source: "canvas", nodeId: node.id, prompt: node.metadata?.prompt },
                 });
                 message.success(t("common.addedToAssets"));
@@ -2216,6 +2230,8 @@ function InfiniteCanvasPage() {
 
                 if (mode === "video") {
                     const spec = nodeSizeFromRatio(generationConfig.size, NODE_DEFAULT_SIZE[CanvasNodeType.Video].width, NODE_DEFAULT_SIZE[CanvasNodeType.Video].height) || NODE_DEFAULT_SIZE[CanvasNodeType.Video];
+                    const isMiniMaxVideo = resolveModelRequestConfig(generationConfig, generationConfig.model).apiFormat === "minimax";
+                    const videoReferences = isMiniMaxVideo ? [...generationContext.referenceImages, ...generationContext.referenceVideos, ...generationContext.referenceAudios] : generationContext.referenceImages;
                     const isEmptyVideoNode = sourceNode?.type === CanvasNodeType.Video && !sourceNode.metadata?.content;
                     const videoId = isEmptyVideoNode ? nodeId : nanoid();
                     const parent = sourceNode?.position || { x: 0, y: 0 };
@@ -2248,7 +2264,7 @@ function InfiniteCanvasPage() {
                     const controller = startGenerationRequest(videoId, nodeId, nodeId, runController);
                     try {
                         const video = await storeGeneratedVideo(
-                            await requestVideoGeneration(generationConfig, effectivePrompt, [...generationContext.referenceImages, ...generationContext.referenceVideos, ...generationContext.referenceAudios], { signal: controller.signal }),
+                            await requestVideoGeneration(generationConfig, effectivePrompt, videoReferences, { signal: controller.signal }),
                         );
                         const videoSize = fitNodeSize(video.width || spec.width, video.height || spec.height, VIDEO_NODE_MAX_WIDTH, VIDEO_NODE_MAX_HEIGHT);
                         setNodes((prev) =>
@@ -2453,7 +2469,9 @@ function InfiniteCanvasPage() {
                     return;
                 }
                 if (node.type === CanvasNodeType.Video) {
-                    const video = await storeGeneratedVideo(await requestVideoGeneration(generationConfig, prompt, retryImages, { signal: controller.signal }));
+                    const isMiniMaxVideo = resolveModelRequestConfig(generationConfig, generationConfig.model).apiFormat === "minimax";
+                    const retryVideoReferences = isMiniMaxVideo && context ? [...context.referenceImages, ...context.referenceVideos, ...context.referenceAudios] : retryImages;
+                    const video = await storeGeneratedVideo(await requestVideoGeneration(generationConfig, prompt, retryVideoReferences, { signal: controller.signal }));
                     const videoSize = fitNodeSize(video.width || node.width, video.height || node.height, VIDEO_NODE_MAX_WIDTH, VIDEO_NODE_MAX_HEIGHT);
                     setNodes((prev) =>
                         prev.map((item) =>
@@ -2655,7 +2673,24 @@ function InfiniteCanvasPage() {
                         position: { x: center.x - nextSize.width / 2, y: center.y - nextSize.height / 2 },
                         width: nextSize.width,
                         height: nextSize.height,
-                        metadata: { content: payload.url, storageKey: payload.storageKey, status: NODE_STATUS_SUCCESS, naturalWidth: payload.width, naturalHeight: payload.height },
+                        metadata: { content: payload.url, storageKey: payload.storageKey, status: NODE_STATUS_SUCCESS, naturalWidth: payload.width, naturalHeight: payload.height, bytes: payload.bytes, mimeType: payload.mimeType || "video/mp4", durationMs: payload.durationMs },
+                    },
+                ]);
+                setSelectedNodeIds(new Set([id]));
+            } else if (payload.kind === "audio") {
+                const spec = NODE_DEFAULT_SIZE[CanvasNodeType.Audio];
+                const center = screenToCanvas((containerRef.current?.getBoundingClientRect().left || 0) + size.width / 2, (containerRef.current?.getBoundingClientRect().top || 0) + size.height / 2);
+                const id = `audio-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+                setNodes((prev) => [
+                    ...prev,
+                    {
+                        id,
+                        type: CanvasNodeType.Audio,
+                        title: payload.title,
+                        position: { x: center.x - spec.width / 2, y: center.y - spec.height / 2 },
+                        width: spec.width,
+                        height: spec.height,
+                        metadata: { content: payload.url, storageKey: payload.storageKey, status: NODE_STATUS_SUCCESS, bytes: payload.bytes, mimeType: payload.mimeType || "audio/mpeg", durationMs: payload.durationMs },
                     },
                 ]);
                 setSelectedNodeIds(new Set([id]));

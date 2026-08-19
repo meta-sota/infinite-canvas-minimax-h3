@@ -4,7 +4,7 @@ import i18n from "@/i18n";
 import { getMediaBlob, resolveMediaUrl, setMediaBlob } from "@/services/file-storage";
 import { getImageBlob, resolveImageUrl, setImageBlob } from "@/services/image-storage";
 import { downloadWebdavFile, uploadWebdavFile, WEBDAV_MANIFEST_FILE_NAME } from "@/services/webdav-sync";
-import type { Asset } from "@/stores/use-asset-store";
+import type { Asset, AudioAsset, VideoAsset } from "@/stores/use-asset-store";
 import { useAssetStore } from "@/stores/use-asset-store";
 import type { WebdavSyncConfig } from "@/stores/use-config-store";
 import type { CanvasProject } from "@/stores/canvas/use-canvas-store";
@@ -271,7 +271,11 @@ async function hydrateAsset(asset: Asset): Promise<Asset> {
     }
     if (asset.kind === "video" && asset.data.storageKey) {
         const url = await resolveMediaUrl(asset.data.storageKey, asset.data.url);
-        return { ...asset, coverUrl: asset.coverUrl.startsWith("blob:") ? url : asset.coverUrl, data: { ...asset.data, url } };
+        return { ...asset, coverUrl: asset.coverUrl.startsWith("blob:") ? url : asset.coverUrl, data: { ...asset.data, url } } as VideoAsset;
+    }
+    if (asset.kind === "audio" && asset.data.storageKey) {
+        const url = await resolveMediaUrl(asset.data.storageKey, asset.data.url);
+        return { ...asset, coverUrl: asset.coverUrl.startsWith("blob:") ? url : asset.coverUrl, data: { ...asset.data, url } } as AudioAsset;
     }
     return asset;
 }

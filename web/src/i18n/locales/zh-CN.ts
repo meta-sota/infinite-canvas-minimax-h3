@@ -63,7 +63,7 @@ export default {
     },
     assets: {
         title: "我的资产",
-        description: "收藏常用文本和图片，按类型、标题和标签快速查找。",
+        description: "收藏常用文本、图片、视频和音频，按类型、标题和标签快速查找。",
         search: "搜索标题、内容、标签或来源",
         type: "类型",
         export: "导出资产",
@@ -81,7 +81,7 @@ export default {
         importFailed: "导入失败，请选择有效的资产压缩包",
         deleted: "资产已删除",
         packageName: "我的资产.zip",
-        kinds: { text: "文本", image: "图片", video: "视频" },
+        kinds: { text: "文本", image: "图片", video: "视频", audio: "音频" },
         fields: {
             title: "标题",
             titleRequired: "请输入标题",
@@ -98,9 +98,12 @@ export default {
             textRequired: "请输入文本内容",
             textPlaceholder: "保存提示词、说明文案、参考描述等文本资产",
             imageContent: "图片内容",
+            audioContent: "音频内容",
         },
         selectImageFile: "选择图片文件",
         noImageSelected: "未选择图片",
+        selectAudioFile: "选择音频文件",
+        noAudioSelected: "未选择音频",
         preview: "预览",
         noCover: "暂无封面",
         untitled: "未命名资产",
@@ -113,6 +116,7 @@ export default {
         copyText: "复制文本",
         downloadImage: "下载图片",
         downloadVideo: "下载视频",
+        downloadAudio: "下载音频",
     },
     notFound: {
         title: "页面不存在",
@@ -182,7 +186,7 @@ export default {
         removeVideo: "移除参考视频",
         removeAudio: "移除参考音频",
         dropReferences: "松开即可上传参考资产",
-        noImages: "暂无参考图，可拖入文件，最多 9 张",
+        noImages: "暂无参考素材，可拖入图片、视频或音频",
         noVideos: "暂无参考视频，可拖入文件，最多 3 个",
         noAudio: "暂无参考音频，可拖入文件，最多 3 个，mp3/wav，单个 15MB 内",
         unsupportedFiles: "已忽略不支持的参考资产，请使用图片、mp4/mov 视频或 mp3/wav 音频",
@@ -268,7 +272,7 @@ export default {
         nodeToolbar: { noPrompt: "暂无可复制的提示词", infoTitle: "查看节点信息", info: "信息", removeTitle: "移除节点", retryTitle: "重新生成", saveAsset: "存资产", downloadAudio: "下载音频", downloadVideo: "下载视频", downloadImage: "下载图片", editTextTitle: "编辑文本", editText: "编辑文字", decreaseFont: "减小字号", increaseFont: "增大字号", zoomOut: "缩小", zoomIn: "放大", uploadImage: "上传图片", replaceVideo: "替换视频", uploadVideo: "上传视频", replaceAudio: "替换音频", uploadAudio: "上传音频", nodeInfo: "节点信息", name: "名称", type: "类型", size: "尺寸", position: "位置", status: "状态", imageGroup: "图片组", imageSize: "图片大小" },
         configNode: { title: "生成配置", image: "生图", text: "文本", video: "视频", audio: "音频", prompt: "提示词", references: "参考图", videoReferences: "参考视频", audioReferences: "参考音频", items: "{{count}} 个", images: "{{count}} 张", compose: "组装提示词", stop: "停止", generate: "开始生成" },
         projectPage: {
-            stopTitle: "停止生成？", stopDescription: "当前生成请求会被中断，已经生成完成的内容会保留。", stop: "停止", continue: "继续生成", configConnection: "配置节点之间不能连接", notFound: "未找到当前画布", exporting: "正在导出当前画布…", exported: "已导出当前画布", clipboardText: "剪切板文本", clipboardImageAdded: "已从剪切板添加图片", clipboardTextAdded: "已从剪切板添加文本", noTextToSave: "没有可保存的文本", canvasText: "画布文本", noVideoToSave: "没有可保存的视频", canvasVideo: "画布视频", noImageToSave: "没有可保存的图片", canvasImage: "画布图片", emptyReverse: "图片节点为空，无法反推提示词", reverseTitle: "反推提示词", reverseConfigTitle: "反推提示词配置", splitTitle: "{{name}} {{row}}-{{column}}", splitSuccess: "已切分为 {{count}} 个子节点", maskResult: "局部编辑结果", maskFailed: "局部修改失败", generationFailed: "生成失败", partialFailed: "部分图片生成失败", allFailed: "全部图片生成失败", retryPromptMissing: "找不到提示词，无法重试", referenceMissing: "参考图片已丢失，无法继续重试", emptyTextImage: "文本节点为空，无法生图", untitledCanvas: "未命名画布", superResolve: "AI 超分", notImplemented: "暂未实现", imageDetails: "图片详情", clearTitle: "清空画布？", clear: "清空", clearDescription: "这会删除当前画布上的所有节点和连线。", reversePreset: "请根据参考图片反推一段适合用于 AI 生图的提示词。\n\n要求：\n1. 只输出提示词正文，不要解释。\n2. 覆盖主体、构图、风格、光线、色彩、材质、镜头和氛围。\n3. 尽量写成可直接用于生图模型的完整提示词。", maskPrompt: "只修改蒙版透明区域，其他区域保持不变。{{prompt}}", editTextPrompt: "请根据要求修改以下文本。\n\n原文：\n{{source}}\n\n修改要求：\n{{prompt}}"
+            stopTitle: "停止生成？", stopDescription: "当前生成请求会被中断，已经生成完成的内容会保留。", stop: "停止", continue: "继续生成", configConnection: "配置节点之间不能连接", notFound: "未找到当前画布", exporting: "正在导出当前画布…", exported: "已导出当前画布", clipboardText: "剪切板文本", clipboardImageAdded: "已从剪切板添加图片", clipboardTextAdded: "已从剪切板添加文本", noTextToSave: "没有可保存的文本", canvasText: "画布文本", noVideoToSave: "没有可保存的视频", canvasVideo: "画布视频", noAudioToSave: "没有可保存的音频", canvasAudio: "画布音频", noImageToSave: "没有可保存的图片", canvasImage: "画布图片", emptyReverse: "图片节点为空，无法反推提示词", reverseTitle: "反推提示词", reverseConfigTitle: "反推提示词配置", splitTitle: "{{name}} {{row}}-{{column}}", splitSuccess: "已切分为 {{count}} 个子节点", maskResult: "局部编辑结果", maskFailed: "局部修改失败", generationFailed: "生成失败", partialFailed: "部分图片生成失败", allFailed: "全部图片生成失败", retryPromptMissing: "找不到提示词，无法重试", referenceMissing: "参考图片已丢失，无法继续重试", emptyTextImage: "文本节点为空，无法生图", untitledCanvas: "未命名画布", superResolve: "AI 超分", notImplemented: "暂未实现", imageDetails: "图片详情", clearTitle: "清空画布？", clear: "清空", clearDescription: "这会删除当前画布上的所有节点和连线。", reversePreset: "请根据参考图片反推一段适合用于 AI 生图的提示词。\n\n要求：\n1. 只输出提示词正文，不要解释。\n2. 覆盖主体、构图、风格、光线、色彩、材质、镜头和氛围。\n3. 尽量写成可直接用于生图模型的完整提示词。", maskPrompt: "只修改蒙版透明区域，其他区域保持不变。{{prompt}}", editTextPrompt: "请根据要求修改以下文本。\n\n原文：\n{{source}}\n\n修改要求：\n{{prompt}}"
         },
         reverseComposer: "参考图片：@[node:{{imageId}}]\n任务说明：@[node:{{textId}}]",
         editors: {
@@ -575,7 +579,7 @@ export default {
     agent: {
         status: { failed: "连接失败", connected: "已连接", connecting: "连接中", disconnected: "未连接" },
         state: { ready: "就绪", connectionRequired: "请填写 Local URL 和 Connect token", invalidUrl: "Local URL 格式不正确", offline: "离线", skillReadFailed: "读取 Skill 失败", skillParseFailed: "Skill 解析失败", requestFailed: "本地 Agent 请求失败" },
-        siteTools: { canvasList: "画布列表", generationStatus: "生成任务状态", imageConfig: "生图配置", imageGenerate: "生图工作台生成", videoConfig: "视频配置", videoGenerate: "视频创作台生成", promptSearch: "搜索提示词", assetList: "资产列表", assetAdd: "添加资产", unknownTool: "未知工具：{{name}}", canvasLoading: "画布还在加载中，请稍后重试", canvasHint: "用 site_navigate 跳转 /canvas/{id} 打开对应画布", assetsLoading: "资产还在加载中，请稍后重试", assetTitleRequired: "请提供资产标题 title", textContentRequired: "kind=text 时需要提供 content 文本内容", imageUrlRequired: "kind=image 时需要提供 imageUrl（图片地址或 dataURL）", imageReadFailed: "无法读取该图片地址，请改用 dataURL 或可跨域访问的图片链接", assetKindUnsupported: "assets_add 仅支持 kind=text 或 kind=image", imageGenerationStarted: "已跳转生图工作台并触发生成，可用 generation_get_status 查询任务", imageConfigApplied: "已跳转生图工作台并填入参数，未触发生成", videoGenerationStarted: "已跳转视频创作台并触发生成，可用 generation_get_status 查询任务", videoConfigApplied: "已跳转视频创作台并填入参数，未触发生成" },
+        siteTools: { canvasList: "画布列表", generationStatus: "生成任务状态", imageConfig: "生图配置", imageGenerate: "生图工作台生成", videoConfig: "视频配置", videoGenerate: "视频创作台生成", promptSearch: "搜索提示词", assetList: "资产列表", assetAdd: "添加资产", unknownTool: "未知工具：{{name}}", canvasLoading: "画布还在加载中，请稍后重试", canvasHint: "用 site_navigate 跳转 /canvas/{id} 打开对应画布", assetsLoading: "资产还在加载中，请稍后重试", assetTitleRequired: "请提供资产标题 title", textContentRequired: "kind=text 时需要提供 content 文本内容", imageUrlRequired: "kind=image 时需要提供 imageUrl（图片地址或 dataURL）", imageReadFailed: "无法读取该图片地址，请改用 dataURL 或可跨域访问的图片链接", audioUrlRequired: "kind=audio 时需要提供 audioUrl（音频地址）", audioReadFailed: "无法读取该音频地址，请检查链接是否可访问", assetKindUnsupported: "assets_add 仅支持 kind=text、kind=image 或 kind=audio", imageGenerationStarted: "已跳转生图工作台并触发生成，可用 generation_get_status 查询任务", imageConfigApplied: "已跳转生图工作台并填入参数，未触发生成", videoGenerationStarted: "已跳转视频创作台并触发生成，可用 generation_get_status 查询任务", videoConfigApplied: "已跳转视频创作台并填入参数，未触发生成" },
         connect: { pluginTitle: "方式一：在 Codex 中使用插件", pluginText: "在 Codex app 安装 Infinite Canvas 插件后，通过插件启动画布，插件会自动启动本地 Agent 并带上连接信息。", directTitle: "方式二：直接运行 Agent", directText: "不使用 Codex 插件时，在终端运行下面命令，再回到网页里连接或手动填入 Local URL 和 Connect token。", commandCopied: "命令已复制", pluginReminder: "Codex 插件提醒", pluginReminderText: "只有安装 Codex 插件或手动添加 MCP 后，工具列表才会进入 Codex 上下文并增加 token 消耗；仅运行 npx -y @basketikun/canvas-agent 启动本地 Agent 不会安装 MCP。", removePlugin: "移除插件", removeMcp: "移除手动 MCP", copyCommand: "复制命令", title: "连接本地 Agent", description: "按使用场景选择一种连接方式。", webConnection: "网页连接", autoDiscover: "默认自动读取 Local URL 和 Connect token，失败时再手动填写。", disconnect: "断开", connect: "连接", localAddress: "本地地址", urlPlaceholder: "例如 http://127.0.0.1:17371", token: "连接 Token", tokenPlaceholder: "自动发现，或手动填入 Connect token" },
         history: { workspace: "工作空间", defaultWorkspace: "默认画布目录", selected: "已选 {{count}} 条", count: "{{count}} 条历史", empty: "暂无历史", deleteCount: "删除 {{count}} 条", refresh: "刷新", newThread: "新对话", selectThread: "选择{{name}}", untitled: "未命名对话", current: "当前", noWorkspaceThreads: "当前工作空间还没有对话记录", connectHint: "连接本地 Agent 后显示历史记录" },
         skills: { selectLocal: "选择本地 Skill", search: "搜索 Skill", loading: "正在读取 Skill…", noMatch: "没有匹配的已启用 Skill", none: "还没有可用的 Skill", select: "选择 Skill", connectHint: "连接 Agent 后使用 Skill" },

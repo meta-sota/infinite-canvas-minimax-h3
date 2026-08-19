@@ -2,13 +2,14 @@ import type { NavigateFunction } from "react-router-dom";
 
 import i18n from "@/i18n";
 import { fetchPrompts } from "@/services/api/prompts";
+import { uploadMediaFile } from "@/services/file-storage";
 import { uploadImage } from "@/services/image-storage";
 import { imageAspectOptions, imageQualityOptions } from "@/components/image-settings-panel";
-import { videoResolutionOptions, videoSecondOptions, videoSizeOptions } from "@/components/video-settings-panel";
+import { minimaxVideoResolutionOptions, minimaxVideoSecondOptions, minimaxVideoSizeOptions, normalizeMiniMaxRatioValue, normalizeMiniMaxResolutionValue, normalizeMiniMaxSecondsValue, videoResolutionOptions, videoSecondOptions, videoSizeOptions } from "@/components/video-settings-panel";
 import type { CanvasAgentSnapshot } from "@/lib/canvas/canvas-agent-ops";
 import { useCanvasStore } from "@/stores/canvas/use-canvas-store";
 import { useAssetStore } from "@/stores/use-asset-store";
-import { modelOptionLabel, modelOptionName, normalizeModelOptionValue, selectableModelsByCapability, useConfigStore } from "@/stores/use-config-store";
+import { modelOptionLabel, modelOptionName, normalizeModelOptionValue, resolveModelRequestConfig, selectableModelsByCapability, useConfigStore } from "@/stores/use-config-store";
 import { useWorkbenchAgentStore } from "@/stores/use-workbench-agent-store";
 
 // Execute site-level Agent tools in the browser, including canvas lists, workbench generation, prompt search, and asset operations.
@@ -188,20 +189,21 @@ function runImageWorkbench(input: SiteToolInput, navigate: NavigateFunction) {
 function getVideoConfig() {
     const { config } = useConfigStore.getState();
     const model = config.videoModel || config.model;
+    const isMiniMax = resolveModelRequestConfig(config, model).apiFormat === "minimax";
     return {
         current: {
             model,
             modelName: modelOptionName(model),
-            size: config.size || "1280x720",
-            seconds: config.videoSeconds || "6",
-            resolution: config.vquality || "720",
+            size: isMiniMax ? normalizeMiniMaxRatioValue(config.size) : config.size || "1280x720",
+            seconds: isMiniMax ? normalizeMiniMaxSecondsValue(config.videoSeconds) : config.videoSeconds || "6",
+            resolution: isMiniMax ? normalizeMiniMaxResolutionValue(config.vquality) : config.vquality || "720",
             generateAudio: config.videoGenerateAudio !== "false",
             watermark: config.videoWatermark === "true",
         },
         models: selectableModelsByCapability(config, "video").map((value) => ({ value, label: modelOptionLabel(config, value) })),
-        sizeOptions: videoSizeOptions,
-        secondsOptions: videoSecondOptions,
-        resolutionOptions: videoResolutionOptions,
+        sizeOptions: isMiniMax ? minimaxVideoSizeOptions : videoSizeOptions,
+        secondsOptions: isMiniMax ? minimaxVideoSecondOptions : videoSecondOptions,
+        resolutionOptions: isMiniMax ? minimaxVideoResolutionOptions : videoResolutionOptions,
     };
 }
 
@@ -258,7 +260,7 @@ async function searchPrompts(input: SiteToolInput) {
 function listAssets(input: SiteToolInput) {
     const { assets, hydrated } = useAssetStore.getState();
     if (!hydrated) throw new Error(siteText("assetsLoading"));
-    const kind = input.kind === "text" || input.kind === "image" || input.kind === "video" ? input.kind : "all";
+    const kind = input.kind === "text" || input.kind === "image" || input.kind === "video" || input.kind === "audio" ? input.kind : "all";
     const keyword = String(input.keyword || "").trim().toLowerCase();
     const filtered = assets.filter((asset) => {
         if (kind !== "all" && asset.kind !== kind) return false;
@@ -306,6 +308,18 @@ async function addAsset(input: SiteToolInput) {
         }
         const id = store.addAsset({ kind: "image", title, coverUrl: stored.url, tags, source, note, data: { dataUrl: stored.url, storageKey: stored.storageKey, width: stored.width, height: stored.height, bytes: stored.bytes, mimeType: stored.mimeType } });
         return { ok: true, id, kind: "image" };
+    }
+    if (kind === "audio") {
+        const audioUrl = String(input.audioUrl || "").trim();
+        if (!audioUrl) throw new Error(siteText("audioUrlRequired"));
+        let stored;
+        try {
+            stored = await uploadMediaFile(audioUrl, "audio");
+        } catch {
+            throw new Error(siteText("audioReadFailed"));
+        }
+        const id = store.addAsset({ kind: "audio", title, coverUrl: "", tags, source, note, data: { url: stored.url, storageKey: stored.storageKey, bytes: stored.bytes, mimeType: stored.mimeType, durationMs: stored.durationMs } });
+        return { ok: true, id, kind: "audio" };
     }
     throw new Error(siteText("assetKindUnsupported"));
 }

@@ -39,7 +39,11 @@ export function CanvasNodePromptPanel({ node, isRunning, onPromptChange, onConfi
     const config = buildNodeConfig(globalConfig, node, mode);
     const requestConfig = resolveModelRequestConfig(config, config.model);
     const isMiniMaxVideo = mode === "video" && requestConfig.apiFormat === "minimax";
-    const promptReferences = isMiniMaxVideo ? ["image", "video", "audio"].flatMap((kind) => mentionReferences.filter((reference) => reference.active && reference.kind === kind)) : mentionReferences;
+    const promptReferences = mode === "video"
+        ? isMiniMaxVideo
+            ? ["image", "video", "audio"].flatMap((kind) => mentionReferences.filter((reference) => reference.active && reference.kind === kind))
+            : mentionReferences.filter((reference) => reference.active && reference.kind === "image")
+        : mentionReferences;
     const hasTextContent = node.type === CanvasNodeType.Text && Boolean(node.metadata?.content?.trim());
     const hasImageContent = node.type === CanvasNodeType.Image && Boolean(node.metadata?.content);
     const isEditingExistingContent = hasTextContent || hasImageContent;

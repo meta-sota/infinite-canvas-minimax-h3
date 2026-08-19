@@ -4,11 +4,16 @@ import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
 import { ImageSettingsTheme } from "@/components/image-settings-panel";
 import { type CanvasTheme } from "@/lib/canvas-theme";
-import { type AiConfig } from "@/stores/use-config-store";
+import { resolveModelRequestConfig, type AiConfig } from "@/stores/use-config-store";
 
 const resolutionOptions = [
     { value: "720", label: "720p" },
     { value: "480", label: "480p" },
+];
+
+const minimaxResolutionOptions = [
+    { value: "768P", label: "768P" },
+    { value: "2K", label: "2K" },
 ];
 
 const sizeOptions = [
@@ -21,10 +26,23 @@ const sizeOptions = [
 ];
 
 const secondOptions = [6, 10, 12, 16, 20];
+const minimaxSecondOptions = [4, 6, 8, 10, 12, 15];
+const minimaxRatioOptions = [
+    { value: "adaptive", labelKey: "adaptive" },
+    { value: "21:9", labelKey: "21:9" },
+    { value: "16:9", labelKey: "16:9" },
+    { value: "4:3", labelKey: "4:3" },
+    { value: "1:1", labelKey: "1:1" },
+    { value: "3:4", labelKey: "3:4" },
+    { value: "9:16", labelKey: "9:16" },
+];
 
 export const videoResolutionOptions = resolutionOptions.map((item) => ({ value: item.value, label: item.label }));
 export const videoSizeOptions = sizeOptions.map((item) => ({ value: item.value, get label() { return i18n.t(`settingsPanels.video.sizes.${item.labelKey}`); } }));
 export const videoSecondOptions = secondOptions.map((value) => String(value));
+export const minimaxVideoResolutionOptions = minimaxResolutionOptions.map((item) => ({ value: item.value, label: item.label }));
+export const minimaxVideoSizeOptions = minimaxRatioOptions.map((item) => ({ value: item.value, get label() { return item.value === "adaptive" ? i18n.t("settingsPanels.video.adaptive") : item.labelKey; } }));
+export const minimaxVideoSecondOptions = minimaxSecondOptions.map((value) => String(value));
 
 type VideoSettingsPanelProps = {
     config: AiConfig;
@@ -32,14 +50,16 @@ type VideoSettingsPanelProps = {
     theme: CanvasTheme;
     showTitle?: boolean;
     className?: string;
+    isMiniMax?: boolean;
 };
 
-export function VideoSettingsPanel({ config, onConfigChange, theme, showTitle = true, className = "w-[320px] space-y-4 rounded-2xl px-1 py-0.5" }: VideoSettingsPanelProps) {
+export function VideoSettingsPanel({ config, onConfigChange, theme, showTitle = true, className = "w-[320px] space-y-4 rounded-2xl px-1 py-0.5", isMiniMax: isMiniMaxProp }: VideoSettingsPanelProps) {
     const { t } = useTranslation();
-    const seconds = config.videoSeconds || "6";
-    const size = normalizeVideoSizeValue(config.size);
+    const isMiniMax = isMiniMaxProp ?? resolveModelRequestConfig(config, config.model).apiFormat === "minimax";
+    const seconds = isMiniMax ? config.videoSeconds : config.videoSeconds || "6";
+    const size = isMiniMax ? normalizeMiniMaxRatioValue(config.size) : normalizeVideoSizeValue(config.size);
     const dimensions = readSizeDimensions(size);
-    const resolution = normalizeVideoResolutionValue(config.vquality);
+    const resolution = isMiniMax ? normalizeMiniMaxResolutionValue(config.vquality) : normalizeVideoResolutionValue(config.vquality);
     const updateDimension = (key: "width" | "height", value: number | null) => {
         const next = Math.max(1, Math.floor(value || dimensions[key] || 720));
         onConfigChange("size", `${key === "width" ? next : dimensions.width}x${key === "height" ? next : dimensions.height}`);
@@ -49,51 +69,71 @@ export function VideoSettingsPanel({ config, onConfigChange, theme, showTitle = 
         <ImageSettingsTheme theme={theme}>
             <div className={className} style={{ color: theme.node.text }} onMouseDown={(event) => event.stopPropagation()}>
                 {showTitle ? <div className="text-lg font-semibold">{t("settingsPanels.video.title")}</div> : null}
-                <SettingGroup title={t("settingsPanels.video.quality")} color={theme.node.muted}>
-                    <div className="grid grid-cols-3 gap-2.5">
-                        {resolutionOptions.map((item) => (
+                <SettingGroup title={t(isMiniMax ? "settingsPanels.video.resolution" : "settingsPanels.video.quality")} color={theme.node.muted}>
+                    <div className={isMiniMax ? "grid grid-cols-2 gap-2.5" : "grid grid-cols-3 gap-2.5"}>
+                        {(isMiniMax ? minimaxResolutionOptions : resolutionOptions).map((item) => (
                             <OptionPill key={item.value} selected={resolution === item.value} theme={theme} onClick={() => onConfigChange("vquality", item.value)}>
                                 {item.label}
                             </OptionPill>
                         ))}
-                        <ResolutionInput value={resolution} theme={theme} onChange={(value) => onConfigChange("vquality", value)} />
+                        {isMiniMax ? null : <ResolutionInput value={resolution} theme={theme} onChange={(value) => onConfigChange("vquality", value)} />}
                     </div>
                 </SettingGroup>
-                <SettingGroup title={t("settingsPanels.video.size")} color={theme.node.muted}>
-                    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2.5">
-                        <DimensionInput prefix="W" value={dimensions.width} disabled={size === "auto"} theme={theme} onChange={(value) => updateDimension("width", value)} />
-                        <span className="text-lg opacity-45">↔</span>
-                        <DimensionInput prefix="H" value={dimensions.height} disabled={size === "auto"} theme={theme} onChange={(value) => updateDimension("height", value)} />
-                    </div>
-                    <div className="grid grid-cols-3 gap-2.5">
-                        {sizeOptions.map((item) => (
-                            <button
-                                key={item.value}
-                                type="button"
-                                className="flex h-[78px] cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border bg-transparent text-sm transition hover:opacity-80"
-                                style={{ borderColor: size === item.value ? theme.node.text : theme.node.stroke, color: theme.node.text }}
-                                onMouseDown={(event) => event.stopPropagation()}
-                                onClick={() => onConfigChange("size", item.value)}
-                            >
-                                <SizePreview width={item.width} height={item.height} color={theme.node.text} />
-                                <span>{t(`settingsPanels.video.sizes.${item.labelKey}`)}</span>
-                                {item.value === "auto" ? null : (
-                                    <span className="text-[11px] leading-none opacity-55">
-                                        {item.value}
-                                    </span>
-                                )}
-                            </button>
-                        ))}
-                    </div>
+                <SettingGroup title={t(isMiniMax ? "settingsPanels.video.ratio" : "settingsPanels.video.size")} color={theme.node.muted}>
+                    {isMiniMax ? (
+                        <div className="grid grid-cols-3 gap-2.5">
+                            {minimaxRatioOptions.map((item) => (
+                                <button
+                                    key={item.value}
+                                    type="button"
+                                    className="flex h-[78px] cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border bg-transparent text-sm transition hover:opacity-80"
+                                    style={{ borderColor: size === item.value ? theme.node.text : theme.node.stroke, color: theme.node.text }}
+                                    onMouseDown={(event) => event.stopPropagation()}
+                                    onClick={() => onConfigChange("size", item.value)}
+                                >
+                                    <RatioPreview value={item.value} color={theme.node.text} />
+                                    <span>{item.value === "adaptive" ? t("settingsPanels.video.adaptive") : item.labelKey}</span>
+                                </button>
+                            ))}
+                        </div>
+                    ) : (
+                        <>
+                            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2.5">
+                                <DimensionInput prefix="W" value={dimensions.width} disabled={size === "auto"} theme={theme} onChange={(value) => updateDimension("width", value)} />
+                                <span className="text-lg opacity-45">↔</span>
+                                <DimensionInput prefix="H" value={dimensions.height} disabled={size === "auto"} theme={theme} onChange={(value) => updateDimension("height", value)} />
+                            </div>
+                            <div className="grid grid-cols-3 gap-2.5">
+                                {sizeOptions.map((item) => (
+                                    <button
+                                        key={item.value}
+                                        type="button"
+                                        className="flex h-[78px] cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border bg-transparent text-sm transition hover:opacity-80"
+                                        style={{ borderColor: size === item.value ? theme.node.text : theme.node.stroke, color: theme.node.text }}
+                                        onMouseDown={(event) => event.stopPropagation()}
+                                        onClick={() => onConfigChange("size", item.value)}
+                                    >
+                                        <SizePreview width={item.width} height={item.height} color={theme.node.text} />
+                                        <span>{t(`settingsPanels.video.sizes.${item.labelKey}`)}</span>
+                                        {item.value === "auto" ? null : (
+                                            <span className="text-[11px] leading-none opacity-55">
+                                                {item.value}
+                                            </span>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        </>
+                    )}
                 </SettingGroup>
-                <SettingGroup title={t("settingsPanels.video.seconds")} color={theme.node.muted}>
+                <SettingGroup title={t(isMiniMax ? "settingsPanels.video.duration" : "settingsPanels.video.seconds")} color={theme.node.muted}>
                     <div className="grid grid-cols-3 gap-2.5">
-                        {secondOptions.map((value) => (
+                        {(isMiniMax ? minimaxSecondOptions : secondOptions).map((value) => (
                             <OptionPill key={value} selected={seconds === String(value)} theme={theme} onClick={() => onConfigChange("videoSeconds", String(value))}>
                                 {value}s
                             </OptionPill>
                         ))}
-                        <NumberInput value={seconds} min={1} max={20} theme={theme} onChange={(value) => onConfigChange("videoSeconds", value)} />
+                        <NumberInput value={seconds} min={isMiniMax ? 4 : 1} max={isMiniMax ? 15 : 20} theme={theme} onChange={(value) => onConfigChange("videoSeconds", value)} onBlur={isMiniMax ? () => onConfigChange("videoSeconds", normalizeMiniMaxSecondsValue(seconds)) : undefined} />
                     </div>
                 </SettingGroup>
             </div>
@@ -101,18 +141,23 @@ export function VideoSettingsPanel({ config, onConfigChange, theme, showTitle = 
     );
 }
 
-export function videoResolutionLabel(value: string) {
-    return `${normalizeVideoResolutionValue(value)}p`;
+export function videoResolutionLabel(value: string, isMiniMax = false) {
+    return isMiniMax ? normalizeMiniMaxResolutionValue(value) : `${normalizeVideoResolutionValue(value)}p`;
 }
 
-export function videoSizeLabel(value: string) {
+export function videoSizeLabel(value: string, isMiniMax = false) {
+    if (isMiniMax) {
+        const ratio = normalizeMiniMaxRatioValue(value);
+        return ratio === "adaptive" ? i18n.t("settingsPanels.video.adaptive") : ratio;
+    }
     if (value === "adaptive" || value === "auto") return i18n.t("settingsPanels.video.adaptive");
     const size = normalizeVideoSizeValue(value);
     const option = sizeOptions.find((item) => item.value === size);
     return option ? i18n.t(`settingsPanels.video.sizes.${option.labelKey}`) : size;
 }
 
-export function videoSecondsLabel(value: string) {
+export function videoSecondsLabel(value: string, isMiniMax = false) {
+    if (isMiniMax) return `${normalizeMiniMaxSecondsValue(value)}s`;
     if (String(value).trim() === "-1") return i18n.t("settingsPanels.video.smart");
     return `${value || "6"}s`;
 }
@@ -127,6 +172,28 @@ export function normalizeVideoResolutionValue(value: string) {
     if (value === "480p" || value === "low") return "480";
     if (value === "720p" || value === "auto" || value === "high" || value === "medium") return "720";
     return value.replace(/p$/i, "") || "720";
+}
+
+export function normalizeMiniMaxResolutionValue(value: string) {
+    const normalized = String(value || "").toLowerCase();
+    return normalized.includes("2k") || Number.parseInt(normalized, 10) >= 1080 ? "2K" : "768P";
+}
+
+export function normalizeMiniMaxRatioValue(value: string) {
+    const normalized = String(value || "").replace("：", ":");
+    if (minimaxRatioOptions.some((item) => item.value === normalized)) return normalized;
+    const match = normalized.match(/^(\d+)(?:x|:)(\d+)$/);
+    if (!match) return "16:9";
+    const ratio = Number(match[1]) / Number(match[2]);
+    return minimaxRatioOptions
+        .filter((item) => item.value !== "adaptive")
+        .map((item) => ({ value: item.value, ratio: readRatio(item.value) }))
+        .reduce((best, item) => (Math.abs(item.ratio - ratio) < Math.abs(best.ratio - ratio) ? item : best)).value;
+}
+
+export function normalizeMiniMaxSecondsValue(value: string) {
+    const seconds = Math.floor(Number(value) || 4);
+    return String(Math.max(4, Math.min(15, seconds)));
 }
 
 function OptionPill({ selected, disabled = false, theme, onClick, children }: { selected: boolean; disabled?: boolean; theme: CanvasTheme; onClick: () => void; children: ReactNode }) {
@@ -170,8 +237,8 @@ function DimensionInput({ prefix, value, disabled, theme, onChange }: { prefix: 
     );
 }
 
-function NumberInput({ value, min, max, theme, onChange }: { value: string; min: number; max: number; theme: CanvasTheme; onChange: (value: string) => void }) {
-    return <input type="number" min={min} max={max} className="h-9 rounded-full border bg-transparent px-3 text-center text-sm outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" style={{ borderColor: theme.node.stroke, color: theme.node.text, WebkitTextFillColor: theme.node.text }} value={value} onChange={(event) => onChange(event.target.value)} onMouseDown={(event) => event.stopPropagation()} />;
+function NumberInput({ value, min, max, theme, onChange, onBlur }: { value: string; min: number; max: number; theme: CanvasTheme; onChange: (value: string) => void; onBlur?: () => void }) {
+    return <input type="number" min={min} max={max} className="h-9 rounded-full border bg-transparent px-3 text-center text-sm outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" style={{ borderColor: theme.node.stroke, color: theme.node.text, WebkitTextFillColor: theme.node.text }} value={value} onChange={(event) => onChange(event.target.value)} onBlur={onBlur} onMouseDown={(event) => event.stopPropagation()} />;
 }
 
 function SizePreview({ width, height, color }: { width: number; height: number; color: string }) {
@@ -180,6 +247,17 @@ function SizePreview({ width, height, color }: { width: number; height: number; 
     const previewWidth = Math.max(10, Math.round((width / longSide) * 26));
     const previewHeight = Math.max(10, Math.round((height / longSide) * 26));
     return <span className="rounded-[3px] border-2" style={{ width: previewWidth, height: previewHeight, borderColor: color }} />;
+}
+
+function RatioPreview({ value, color }: { value: string; color: string }) {
+    if (value === "adaptive") return <span className="grid h-[26px] w-[26px] place-items-center rounded-[3px] border-2 text-xs" style={{ borderColor: color }}>↗</span>;
+    const [width, height] = value.split(":").map(Number);
+    return <SizePreview width={width} height={height} color={color} />;
+}
+
+function readRatio(value: string) {
+    const [width, height] = value.split(":").map(Number);
+    return width / Math.max(1, height);
 }
 
 function readSizeDimensions(size: string) {

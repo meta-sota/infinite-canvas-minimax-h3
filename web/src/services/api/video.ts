@@ -159,7 +159,7 @@ async function createMiniMaxVideoTask(config: AiConfig, model: string, prompt: s
         content,
         resolution: normalizeMiniMaxResolution(config.vquality, config.size),
         duration: normalizeMiniMaxDuration(config.videoSeconds),
-        ratio: references.length ? "adaptive" : normalizeMiniMaxRatio(config.size),
+        ratio: normalizeMiniMaxRatio(config.size),
         aigc_watermark: boolConfig(config.videoWatermark, false),
     };
     try {
