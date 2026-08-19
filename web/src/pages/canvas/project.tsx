@@ -171,14 +171,17 @@ function InfiniteCanvasPage() {
         hasMoved: boolean;
         startX: number;
         startY: number;
+        startedOnVideo: boolean;
         initialSelectedNodes: { id: string; x: number; y: number }[];
     }>({
         isDraggingNode: false,
         hasMoved: false,
         startX: 0,
         startY: 0,
+        startedOnVideo: false,
         initialSelectedNodes: [],
     });
+    const suppressNodeClickUntilRef = useRef(0);
 
     const config = useConfigStore((state) => state.config);
     const effectiveConfig = useEffectiveConfig();
@@ -1051,6 +1054,7 @@ function InfiniteCanvasPage() {
             hasMoved: false,
             startX: event.clientX,
             startY: event.clientY,
+            startedOnVideo: event.target instanceof HTMLVideoElement,
             initialSelectedNodes: currentNodes.filter((node) => dragIds.has(node.id)).map((node) => ({ id: node.id, x: node.position.x, y: node.position.y })),
         };
         historyPausedRef.current = true;
@@ -1058,13 +1062,14 @@ function InfiniteCanvasPage() {
         setIsNodeDragging(true);
     }, []);
 
-    const finishNodeDrag = useCallback((clientX?: number, clientY?: number) => {
+    const finishNodeDrag = useCallback((clientX?: number, clientY?: number, event?: { preventDefault: () => void }) => {
         if (rafRef.current) {
             cancelAnimationFrame(rafRef.current);
             rafRef.current = null;
         }
         if (!dragRef.current.isDraggingNode) return;
 
+        const didMove = dragRef.current.hasMoved;
         const wasClick = !dragRef.current.hasMoved && dragRef.current.initialSelectedNodes.length === 1;
         const clickedNodeId = dragRef.current.initialSelectedNodes[0]?.id;
         const currentViewport = viewportRef.current;
@@ -1074,6 +1079,10 @@ function InfiniteCanvasPage() {
 
         historyPausedRef.current = false;
         nodeDraggingRef.current = false;
+        if (didMove && dragRef.current.startedOnVideo) {
+            suppressNodeClickUntilRef.current = Date.now() + 500;
+            event?.preventDefault();
+        }
         setIsNodeDragging(false);
         setDropTargetGroupId(null);
         if (dragRef.current.hasMoved && clientX != null && clientY != null) {
@@ -1096,6 +1105,7 @@ function InfiniteCanvasPage() {
 
         dragRef.current.isDraggingNode = false;
         dragRef.current.hasMoved = false;
+        dragRef.current.startedOnVideo = false;
         dragRef.current.initialSelectedNodes = [];
         if (wasClick && clickedNodeId) {
             const clickedNode = nodesRef.current.find((node) => node.id === clickedNodeId);
@@ -1107,6 +1117,13 @@ function InfiniteCanvasPage() {
                 setDialogNodeId(clickedNodeId);
             }
         }
+    }, []);
+
+    const handleNodeClickCapture = useCallback((event: ReactMouseEvent) => {
+        if (Date.now() >= suppressNodeClickUntilRef.current) return;
+        suppressNodeClickUntilRef.current = 0;
+        event.preventDefault();
+        event.stopPropagation();
     }, []);
 
     const handleGlobalMouseMove = useCallback(
@@ -1186,7 +1203,7 @@ function InfiniteCanvasPage() {
 
     const handleGlobalMouseUp = useCallback(
         (event: MouseEvent) => {
-            finishNodeDrag(event.clientX, event.clientY);
+            finishNodeDrag(event.clientX, event.clientY, event);
 
             selectionBoxRef.current = null;
             setSelectionBox(null);
@@ -1211,7 +1228,7 @@ function InfiniteCanvasPage() {
     );
 
     useEffect(() => {
-        const handlePointerUp = (event: PointerEvent) => finishNodeDrag(event.clientX, event.clientY);
+        const handlePointerUp = (event: PointerEvent) => finishNodeDrag(event.clientX, event.clientY, event);
         const cancelNodeDrag = () => finishNodeDrag();
         window.addEventListener("mousemove", handleGlobalMouseMove);
         window.addEventListener("mouseup", handleGlobalMouseUp);
@@ -2871,6 +2888,7 @@ function InfiniteCanvasPage() {
                             renderPanel={renderNodePanel}
                             renderNodeContent={renderNodeContentPanel}
                             onMouseDown={handleNodeMouseDown}
+                            onClickCapture={handleNodeClickCapture}
                             onSelectCapture={handleNodeSelectCapture}
                             onHoverStart={handleNodeHoverStart}
                             onHoverEnd={handleNodeHoverEnd}

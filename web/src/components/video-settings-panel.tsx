@@ -86,13 +86,13 @@ export function VideoSettingsPanel({ config, onConfigChange, theme, showTitle = 
                                 <button
                                     key={item.value}
                                     type="button"
-                                    className="flex h-[78px] cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border bg-transparent text-sm transition hover:opacity-80"
+                                    className="flex h-[60px] cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border bg-transparent text-xs transition hover:opacity-80"
                                     style={{ borderColor: size === item.value ? theme.node.text : theme.node.stroke, color: theme.node.text }}
                                     onMouseDown={(event) => event.stopPropagation()}
                                     onClick={() => onConfigChange("size", item.value)}
                                 >
                                     <RatioPreview value={item.value} color={theme.node.text} />
-                                    <span>{item.value === "adaptive" ? t("settingsPanels.video.adaptive") : item.labelKey}</span>
+                                    <span className="leading-none">{item.value === "adaptive" ? t("settingsPanels.video.adaptive") : item.labelKey}</span>
                                 </button>
                             ))}
                         </div>
@@ -250,9 +250,12 @@ function SizePreview({ width, height, color }: { width: number; height: number; 
 }
 
 function RatioPreview({ value, color }: { value: string; color: string }) {
-    if (value === "adaptive") return <span className="grid h-[26px] w-[26px] place-items-center rounded-[3px] border-2 text-xs" style={{ borderColor: color }}>↗</span>;
+    if (value === "adaptive") return <span className="grid h-5 w-5 place-items-center rounded-[3px] border text-[10px]" style={{ borderColor: color }}>↗</span>;
     const [width, height] = value.split(":").map(Number);
-    return <SizePreview width={width} height={height} color={color} />;
+    const longSide = Math.max(width, height);
+    const previewWidth = Math.max(8, Math.round((width / longSide) * 20));
+    const previewHeight = Math.max(8, Math.round((height / longSide) * 20));
+    return <span className="rounded-[2px] border" style={{ width: previewWidth, height: previewHeight, borderColor: color }} />;
 }
 
 function readRatio(value: string) {

@@ -35,6 +35,7 @@ type CanvasNodeProps = {
     isGroupDropTarget?: boolean;
     batchExpanded?: boolean;
     onMouseDown: (event: React.MouseEvent, nodeId: string) => void;
+    onClickCapture?: (event: React.MouseEvent, nodeId: string) => void;
     onSelectCapture?: (event: React.MouseEvent, nodeId: string) => void;
     onHoverStart: (nodeId: string) => void;
     onHoverEnd: (nodeId: string) => void;
@@ -99,6 +100,7 @@ export const CanvasNode = React.memo(function CanvasNode({
     isGroupDropTarget = false,
     batchExpanded = false,
     onMouseDown,
+    onClickCapture,
     onSelectCapture,
     onHoverStart,
     onHoverEnd,
@@ -311,6 +313,7 @@ export const CanvasNode = React.memo(function CanvasNode({
                 onHoverEnd(data.id);
             }}
             onMouseDownCapture={(event) => onSelectCapture?.(event, data.id)}
+            onClickCapture={(event) => onClickCapture?.(event, data.id)}
             onContextMenu={(event) => onContextMenu(event, data.id)}
         >
             {(isSelected || hovered || isEditingTitle) && (
