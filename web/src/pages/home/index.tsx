@@ -33,7 +33,7 @@ export default function IndexPage() {
 
     useEffect(() => {
         void fetchPrompts({ pageSize: 12 })
-            .then((data) => setPromptShowcase(data.items))
+            .then((data) => setPromptShowcase(data.items.filter((item) => !item.title.includes("拍照解题"))))
             .catch((error) => message.error(error instanceof Error ? error.message : i18n.t("home.promptError")));
     }, [message]);
 
