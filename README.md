@@ -22,6 +22,10 @@
   <a href="docs/content/docs/overview/quick-start.mdx">快速开始</a> · <a href="docs/content/docs/overview/features.mdx">功能介绍</a> · <a href="docs/content/docs/overview/render.mdx">Render 部署</a> · <a href="docs/content/docs/overview/docker.mdx">Docker 部署</a> · <a href="docs/content/docs/canvas/canvas-node-manual.mdx">画布节点操作手册</a> · <a href="docs/content/docs/canvas/canvas-shortcuts.mdx">画布快捷键</a> · <a href="SECURITY.md">漏洞提交</a> · <a href="docs/content/docs/progress/todo.mdx">待办事项</a> · <a href="canvas-agent/README.md">本地 Canvas Agent</a> · <a href="plugins/infinite-canvas">Codex app 插件</a>
 </p>
 
+<p align="center">
+  <a href="https://canvas.metaso.cn/" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: underline;"><strong style="color: #2563eb;">🚀 在线体验 MiniMax H3：canvas.metaso.cn →</strong></a>
+</p>
+
 无限画布是一款面向图片与视频创作的开源工作台。它把画布编排、AI 图片生成、MiniMax H3 视频生成、参考素材、对话助手、提示词库和素材沉淀放在同一个界面里，适合连续探索并迭代视觉方案。
 
 > [!CAUTION]
@@ -60,6 +64,7 @@
 
 - 无限画布：多画布项目、节点拖拽缩放、连线、小地图、撤销重做、导入导出。
 - AI 创作：浏览器前台直连你配置的 OpenAI 兼容接口，支持文生图、图生图、参考图编辑、文本问答、音频和视频生成。
+- MiniMax H3 视频生成：提供原生 MiniMax H3 协议的视频生成节点，支持 768P 与 2K 输出、4–15 秒视频时长和画面比例设置；节点支持引用图片、视频和音频参考素材，并会随视频生成请求一并提交。
 - 画布助手：围绕选中节点和上游节点对话、生图，并把结果插回画布。
 - 本地 Agent：通过本机 Canvas Agent 连接 Codex / Claude Code，让 Agent 通过 MCP 操作当前画布；
 - Codex App 插件：提供 Codex app 插件，安装后会自动注册 MCP 并尝试拉起本地 Agent。
