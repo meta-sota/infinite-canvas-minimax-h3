@@ -91,7 +91,7 @@ export const defaultConfig: AiConfig = {
         },
         {
             id: "metaso-video",
-            name: "Metaso Minimax-H3",
+            name: "Minimax-H3",
             baseUrl: METASO_VIDEO_BASE_URL,
             apiKey: "",
             apiFormat: "minimax",
@@ -240,7 +240,7 @@ export const useConfigStore = create<ConfigStore>()(
                 const metasoChannel = defaultConfig.channels.find((channel) => channel.id === "metaso-video");
                 const savedMetasoChannel = channels.find((channel) => channel.id === metasoChannel?.id);
                 if (metasoChannel && savedMetasoChannel) {
-                    if (savedMetasoChannel.name === "Metaso 国内视频") savedMetasoChannel.name = metasoChannel.name;
+                    if (["Metaso 国内视频", "Metaso Minimax-H3"].includes(savedMetasoChannel.name)) savedMetasoChannel.name = metasoChannel.name;
                     if (savedMetasoChannel.apiFormat === "openai" && savedMetasoChannel.baseUrl.replace(/\/+$/, "") === LEGACY_METASO_VIDEO_BASE_URL.replace(/\/+$/, "")) {
                         savedMetasoChannel.apiFormat = "minimax";
                         savedMetasoChannel.baseUrl = metasoChannel.baseUrl;

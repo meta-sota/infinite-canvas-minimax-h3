@@ -22,41 +22,39 @@
   <a href="docs/content/docs/overview/quick-start.mdx">快速开始</a> · <a href="docs/content/docs/overview/features.mdx">功能介绍</a> · <a href="docs/content/docs/overview/render.mdx">Render 部署</a> · <a href="docs/content/docs/overview/docker.mdx">Docker 部署</a> · <a href="docs/content/docs/canvas/canvas-node-manual.mdx">画布节点操作手册</a> · <a href="docs/content/docs/canvas/canvas-shortcuts.mdx">画布快捷键</a> · <a href="SECURITY.md">漏洞提交</a> · <a href="docs/content/docs/progress/todo.mdx">待办事项</a> · <a href="canvas-agent/README.md">本地 Canvas Agent</a> · <a href="plugins/infinite-canvas">Codex app 插件</a>
 </p>
 
-无限画布是一款面向图片创作的开源工作台。它把画布编排、AI 图片生成、参考图编辑、对话助手、提示词库和素材沉淀放在同一个界面里，适合用来探索视觉方案并连续迭代图片结果。
+无限画布是一款面向图片与视频创作的开源工作台。它把画布编排、AI 图片生成、MiniMax H3 视频生成、参考素材、对话助手、提示词库和素材沉淀放在同一个界面里，适合连续探索并迭代视觉方案。
 
 > [!CAUTION]
 > 项目目前处于开发阶段，不保证历史数据兼容。各种本地存储格式都可能直接调整，欢迎关注后续更新。
 >
 > 如果你需要稳定维护自己的分支，建议自行 fork 后独立开发。二次开发与 PR 请保留原作者信息和前端页面标识。
 
-## 赞助商
+## 技术支持
 
-<table>
-  <tr>
-    <td width="190" align="center">
-      <a href="https://www.atlascloud.ai/zh?utm_source=github&amp;utm_medium=link&amp;utm_campaign=infinite-canvas" target="_blank" rel="noopener noreferrer"><img src="assets/atlascloud.svg" width="163" alt="Atlas Cloud"></a>
-    </td>
-    <td>
-      <a href="https://www.atlascloud.ai/zh?utm_source=github&amp;utm_medium=link&amp;utm_campaign=infinite-canvas" target="_blank" rel="noopener noreferrer">Atlas Cloud</a> is a full-modal AI inference platform that gives developers a single AI API to access video generation, image generation, and LLM APIs. Instead of managing multiple vendor integrations, you connect once and get unified access to 300+ curated models across all modalities. Check out <a href="https://www.atlascloud.ai/console/coding-plan" target="_blank" rel="noopener noreferrer">Atlas Cloud's new coding plan promotion</a> for more budget-friendly API access.
-    </td>
-  </tr>
-  <tr>
-    <td width="190" align="center">
-      <a href="https://metaso.cn/minimax-h3/?s=inf" target="_blank" rel="noopener noreferrer"><img src="assets/metaso.jpg" width="163" alt="秘塔科技"></a>
-    </td>
-    <td>
-      <strong>MiniMax H3 视频生成 API｜秘塔科技</strong> 秘塔科技提供高性价比的 MiniMax H3 视频生成服务：<strong>768P 仅 0.09 元/秒，2K 仅 0.15 元/秒</strong>。支持原生 2K、音画同步，API 兼容 <strong>OpenAI 协议</strong>，同时支持 <strong>ComfyUI</strong>，无需自行部署 GPU。 🎁 通过 <a href="https://metaso.cn/minimax-h3/?s=inf" target="_blank" rel="noopener noreferrer">无限画布专属链接注册</a>，即可领取赠送额度及专属优惠。
-    </td>
-  </tr>
-  <tr>
-    <td width="190" align="center">
-      <a href="https://infistar.ai/register?aff=4X3V9NA9&amp;ref_source=link" target="_blank" rel="noopener noreferrer"><img src="assets/infistar.png" width="163" alt="Infistar.ai 无限星河"></a>
-    </td>
-    <td>
-      <strong>无限画布 × Infistar.ai 无限星河｜内置原生画布 · 全能多模态 API</strong> 💡 原生集成，即点即用： Infistar.ai 已原生上架无限画布！同时提供低至官方 1 折的稳定 API 中转服务，模型倍率与调用明细全程透明。 🎨 多模态生图/生视频： 完美适配 Seedance、FLUX、Midjourney、Sora、Runway、Luma、可灵（Kling）等顶级图片与视频大模型。 🧠 全系语言模型： 覆盖 OpenAI、Claude、Gemini、Grok、DeepSeek、Qwen、GLM 等国内外主流模型，兼容 OpenAI 标准接口。 ⚡ 动态调度： 多路供应保障高可用，拒绝断连。 🎁 专属福利： 通过 <a href="https://infistar.ai/register?aff=4X3V9NA9&amp;ref_source=link" target="_blank" rel="noopener noreferrer">专属链接</a> 注册，立享赠送额度/专属折扣/首充权益！
-    </td>
-  </tr>
-</table>
+<div align="center">
+  <a href="https://metaso.cn/minimax-h3/?s=inf" target="_blank" rel="noopener noreferrer">
+    <img src="assets/metaso.jpg" width="163" alt="秘塔科技">
+  </a>
+  <h3>秘塔 MiniMax H3 视频生成服务</h3>
+  <p>秘塔为无限画布提供 MiniMax H3 视频生成技术支持，已适配原生 MiniMax H3 协议，支持 768P 与 2K 输出、4–15 秒视频时长，以及图片、视频和音频参考素材。无需自建 GPU，即可在画布中直接创建和管理视频任务。</p>
+  <p><strong>通过无限画布专属链接注册，可获取赠送额度及专属优惠：</strong><br>
+    <a href="https://metaso.cn/minimax-h3/?s=inf" target="_blank" rel="noopener noreferrer">打开 MiniMax H3 控制台</a>
+  </p>
+</div>
+
+### MiniMax H3 价格
+
+| 项目 | 价格 | 计费说明 |
+| --- | ---: | --- |
+| 2K 视频输出 | 0.15 元/秒 | 按生成视频时长计费 |
+| 768P 视频输出 | 0.09 元/秒 | 按生成视频时长计费 |
+| 音频输入 | 免费 | 参考音频不额外收费 |
+| 图片输入 | 前 5 张免费，超出 0.05 元/张 | 按输入图片数量计费 |
+| 参考视频输入（2K 输出） | 0.15 元/秒 | 按输入视频时长计费 |
+| 参考视频输入（768P 输出） | 0.09 元/秒 | 按输入视频时长计费 |
+| H3 Context IR | 0.05 元/次 | 默认开启，可在控制台关闭 |
+
+> 以上价格以 MiniMax H3 控制台的最新计费规则为准。
 
 ## 核心功能
 
