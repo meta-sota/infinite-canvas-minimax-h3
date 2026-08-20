@@ -139,3 +139,12 @@ docker compose up -d
    <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=meta-sota/infinite-canvas&type=date&legend=top-left" />
  </picture>
 </a>
+
+## 二次开发说明
+
+本项目是秘塔为方便用户使用 MiniMax H3 模型进行视频生成而开展的二次开发版本。
+
+### 原作者信息
+
+- 原作者：[@basketikun](https://github.com/basketikun)
+- 原项目：[basketikun/infinite-canvas](https://github.com/basketikun/infinite-canvas)
